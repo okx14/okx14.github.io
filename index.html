@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ACCESS TERMINAL</title>
+
+<style>
+*{box-sizing:border-box;}
+
+body{
+  margin:0;
+  height:100vh;
+  background:black;
+  color:#00ff66;
+  font-family:"Courier New", monospace;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+
+/* CRT Scanlines */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:repeating-linear-gradient(
+    to bottom,
+    rgba(0,255,102,0.05) 0px,
+    rgba(0,255,102,0.05) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+  pointer-events:none;
+  z-index:0;
+}
+
+/* Terminal Box */
+.terminal{
+  width:400px;
+  padding:40px;
+  border:2px solid #00ff66;
+  background:rgba(0,0,0,.9);
+  text-align:center;
+  box-shadow:0 0 20px #00ff66;
+  z-index:1;
+}
+
+/* Headings */
+h3{
+  font-size:20px;
+  letter-spacing:3px;
+  text-shadow:0 0 10px #00ff66;
+  margin-bottom:20px;
+}
+
+/* ===== SYSTEM LINE ===== */
+.system-line{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+  font-size:14px;
+  opacity:.85;
+  margin-bottom:20px;
+}
+
+.system-text{ text-align:center; }
+.bracket{ flex-shrink:0; }
+
+/* Typing effect */
+.typing::after{
+  content:"_";
+  animation:blink 1s step-start infinite;
+}
+
+@keyframes blink{ 50%{opacity:0;} }
+
+/* Inputs */
+input{
+  width:100%;
+  padding:10px;
+  background:black;
+  border:2px solid #00ff66;
+  color:#00ff66;
+  font-family:inherit;
+  font-size:16px;
+  outline:none;
+  box-shadow:0 0 10px #00ff66 inset;
+}
+
+input.error{
+  border-color:red;
+  box-shadow:0 0 15px red inset;
+}
+
+/* Buttons */
+button{
+  margin-top:20px;
+  width:100%;
+  padding:10px;
+  background:black;
+  color:#00ff66;
+  border:2px solid #00ff66;
+  font-family:inherit;
+  cursor:pointer;
+  box-shadow:0 0 10px #00ff66;
+}
+
+button:hover{
+  background:#00ff66;
+  color:black;
+}
+
+/* Messages */
+.message{
+  margin-top:15px;
+  min-height:20px;
+  font-size:14px;
+}
+
+.hidden{display:none;}
+
+/* Hints */
+.hint{
+  margin-top:10px;
+  font-size:12px;
+  opacity:.6;
+  border-top:1px dotted #00ff66;
+  padding-top:5px;
+  font-style:italic;
+}
+
+/* LEVEL 2 */
+#codeDisplay{
+  font-size:20px;
+  text-align:center;
+  margin-bottom:15px;
+}
+
+.keypad{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+
+.keypad button{
+  font-size:20px;
+  padding:15px;
+}
+
+/* Countdown */
+#countdown{
+  margin-top:10px;
+  animation:blink 1s step-start infinite;
+}
+
+/* ===== MOBILE ONLY ===== */
+@media (max-width:600px){
+  body{
+    align-items:flex-start;
+    padding-top:40px;
+  }
+  .terminal{
+    width:90vw;
+    max-width:380px;
+    padding:25px;
+  }
+
+  .system-text[data-desktop]{ display:none; }
+  .system-text[data-mobile]{ display:inline; }
+}
+
+/* Desktop Default */
+.system-text[data-mobile]{ display:none; }
+</style>
+</head>
+
+<body>
+<div class="terminal">
+
+  <!-- LEVEL 1 -->
+  <div id="level1">
+    <h3>ACCESS TERMINAL</h3>
+
+    <div class="system-line typing">
+      <span class="bracket">[</span>
+      <span class="system-text" >ENTER PASSWORD</span>
+
+      <span class="bracket">]</span>
+    </div>
+
+    <input type="password" id="pw" />
+    <button onclick="checkPassword()">CONNECT</button>
+    <div class="message" id="msg1"></div>
+    <div class="hint">Hinweis: Ich bringe dir Freude, doch in meiner Gier liegt dein Untergang</div>
+  </div>
+
+  <!-- LEVEL 2 -->
+  <div id="level2" class="hidden">
+    <h3>SECURITY LOCK</h3>
+
+    <div class="system-line">
+      <span class="bracket">[</span>
+      <span class="system-text">ENTER NUMERIC CODE</span>
+      <span class="bracket">]</span>
+    </div>
+
+    <input id="codeDisplay" readonly />
+    <div class="keypad">
+      <button onclick="addNum(1)">1</button>
+      <button onclick="addNum(2)">2</button>
+      <button onclick="addNum(3)">3</button>
+      <button onclick="addNum(4)">4</button>
+      <button onclick="addNum(5)">5</button>
+      <button onclick="addNum(6)">6</button>
+      <button onclick="addNum(7)">7</button>
+      <button onclick="addNum(8)">8</button>
+      <button onclick="addNum(9)">9</button>
+      <button onclick="delNum()">DEL</button>
+      <button onclick="addNum(0)">0</button>
+      <button onclick="checkCode()">ENTER</button>
+    </div>
+    <div class="message" id="msg2"></div>
+    <div class="hint">Hinweis: Manchmal möchte ich zurück in die Zukunft.</div>
+  </div>
+
+  <!-- LEVEL 3 -->
+  <div id="level3" class="hidden">
+    <h3>TERMINAL PUZZLE</h3>
+
+    <div class="system-line">
+      <span class="bracket">[</span>
+      <span class="system-text">FIND THE PASSWORD</span>
+      <span class="bracket">]</span>
+    </div>
+
+    <div class="system-line">
+      <span class="system-text">(51.4213112, -0.4289067)</span>
+    </div>
+
+    <input id="puzzleInput" />
+    <button onclick="checkPuzzle()">CONNECT</button>
+    <button onclick="backToStart()">← ZURÜCK</button>
+
+    <div class="message" id="msg3"></div>
+    <div class="hint">Hinweis: Nutze deine digitale Landkarte</div>
+    <div id="countdown"></div>
+  </div>
+
+</div>
+
+<script>
+// Audio() erstellt ein HTMLAudioElement (preload ist standardmäßig "auto"). [web:22]
+const sfxKeypress = new Audio("keypress.wav");
+const sfxSuccess  = new Audio("success.mp3");
+const sfxWrong    = new Audio("wrong.wav");
+
+sfxKeypress.preload = "auto";
+sfxSuccess.preload  = "auto";
+sfxWrong.preload    = "auto";
+
+function playSfx(a){
+  try{
+    a.currentTime = 0;
+    a.play();
+  }catch(e){}
+}
+
+// classList add/remove zum Triggern der Error-Optik. [web:82]
+function flashError(el){
+  el.classList.remove("error");
+  void el.offsetWidth;
+  el.classList.add("error");
+  setTimeout(()=> el.classList.remove("error"), 700);
+}
+
+// setTimeout gibt eine ID zurück; clearTimeout kann laufende Timer abbrechen. [web:89][web:103]
+let msg2Timer = null;
+let msg3Timer = null;
+
+function showDenied(msgEl, timerName){
+  msgEl.style.color = "red";
+  msgEl.innerHTML = "[ ACCESS DENIED ]";
+  if (timerName === "msg2"){
+    if (msg2Timer) clearTimeout(msg2Timer);
+    msg2Timer = setTimeout(()=>{ msgEl.innerHTML = ""; }, 1000);
+  } else {
+    if (msg3Timer) clearTimeout(msg3Timer);
+    msg3Timer = setTimeout(()=>{ msgEl.innerHTML = ""; }, 1000);
+  }
+}
+
+const correctPassword="geld";
+const correctCode="2015";
+const puzzlePassword="Cottage";
+let currentCode="";
+
+function checkPassword(){
+  const pw=document.getElementById("pw");
+  const msg=document.getElementById("msg1");
+
+  if(pw.value===correctPassword){
+    playSfx(sfxSuccess);
+    msg.style.color="#00ff66";
+    msg.innerHTML="[ ACCESS GRANTED ]";
+    setTimeout(()=>{
+      level1.classList.add("hidden");
+      level2.classList.remove("hidden");
+      msg.innerHTML="";
+    },800);
+  }else{
+    playSfx(sfxWrong);
+    pw.classList.add("error");
+    msg.style.color="red";
+    msg.innerHTML="[ ACCESS DENIED ]";
+    setTimeout(()=>{ msg.innerHTML=""; pw.classList.remove("error"); }, 1000);
+    pw.value="";
+  }
+}
+
+function addNum(n){
+  playSfx(sfxKeypress);
+  if(currentCode.length<6){
+    currentCode+=n;
+    codeDisplay.value=currentCode;
+  }
+}
+function delNum(){
+  playSfx(sfxKeypress);
+  currentCode=currentCode.slice(0,-1);
+  codeDisplay.value=currentCode;
+}
+
+function checkCode(){
+  const msg = document.getElementById("msg2");
+  playSfx(sfxKeypress);
+
+  if(currentCode===correctCode){
+    playSfx(sfxSuccess);
+    msg.style.color="#00ff66";
+    msg.innerHTML="[ ACCESS GRANTED ]";
+    setTimeout(()=>{
+      level2.classList.add("hidden");
+      level3.classList.remove("hidden");
+      msg.innerHTML="";
+    },800);
+  }else{
+    playSfx(sfxWrong);
+    flashError(document.getElementById("codeDisplay"));
+    showDenied(msg, "msg2");
+    currentCode="";
+    codeDisplay.value="";
+  }
+}
+
+function checkPuzzle(){
+  const msg = document.getElementById("msg3");
+  playSfx(sfxKeypress);
+
+  if(puzzleInput.value===puzzlePassword){
+    playSfx(sfxSuccess);
+    msg.style.color="#00ff66";
+    msg.innerHTML="[ ACCESS GRANTED ]";
+  }else{
+    playSfx(sfxWrong);
+    flashError(document.getElementById("puzzleInput"));
+    showDenied(msg, "msg3");
+    puzzleInput.value="";
+  }
+}
+
+function backToStart(){
+  playSfx(sfxKeypress);
+  level3.classList.add("hidden");
+  level1.classList.remove("hidden");
+}
+</script>
+</body>
+</html>
